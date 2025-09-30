@@ -61,6 +61,81 @@ The repository now includes a Flutter-based mobile app under `mobile/` that work
 - **Voice chat with Dary** using the same N8N backend
 - Cross-platform: Android, iOS, Web, and desktop
 
+## 🧭 System Architecture
+
+### Context (C4 - Level 1)
+
+```mermaid
+flowchart LR
+  User((User))
+  subgraph DarySystem[Dary System]
+    VA[Python Voice Assistant (dary.py)]
+    Mobile[Flutter Mobile/Web/Desktop App]
+    N8N[n8n Orchestrator (workflowN8N.json)]
+    HA[Home Assistant]
+    DB[(MySQL Device Catalog)]
+  end
+
+  User -- voice/commands --> VA
+  User -- tap/voice/chat --> Mobile
+  VA -- webhook JSON --> N8N
+  Mobile -- HTTP/Webhook --> N8N
+  N8N -- service calls --> HA
+  N8N -- catalog/search --> DB
+  HA -- states/services --> N8N
+  N8N -- responses --> VA
+  N8N -- responses --> Mobile
+```
+
+### Containers (C4 - Level 2)
+
+```mermaid
+flowchart TB
+  subgraph Client
+    A1[Mic + Wake Word (ONNX)]
+    A2[Speech-to-Text (Scribe)]
+    A3[Webhook Client]
+    M1[Flutter UI]
+    M2[Recorder]
+    M3[HTTP Client]
+  end
+
+  subgraph Server/Automation
+    N1[n8n Workflow: Intent Routing + Agents]
+    N2[Device Catalog Processor]
+    N3[Session/Memory]
+    H1[Home Assistant API]
+    D1[(MySQL: ha_devices)]
+  end
+
+  A1 --> A2 --> A3 --> N1
+  M2 --> M3 --> N1
+  N1 --> H1
+  N1 --> D1
+  H1 --> N1
+```
+
+### Voice Flow (Desktop Assistant)
+
+1. Wake word detected (OpenWakeWord ONNX)
+2. Capture utterance with VAD, transcribe via ElevenLabs Scribe
+3. POST JSON to n8n webhook with `query` and `source="dary"`
+4. n8n routes to agents, queries device catalog (MySQL), calls Home Assistant
+5. n8n returns response text; assistant optionally plays TTS
+
+### Mobile Flow (Future Wiring)
+
+1. Record audio (Flutter `record`)
+2. Send audio or text to the same n8n webhook (configurable)
+3. Receive response and display in UI
+
+### Configuration Surface
+
+- Wake model path: `WAKEWORD_MODEL_PATH` or `WAKEWORD_MODEL_DIR` + `WAKEWORD_MODEL_FILENAME`
+- Audio devices: `INPUT_DEVICE`, `OUTPUT_DEVICE`
+- ElevenLabs: `ELEVENLABS_API_KEY`, `VOICE_ID`
+- Webhook: `WEBHOOK_URL` (desktop), app config for mobile
+
 ### Mobile App: Quick Start
 
 Prerequisites:
