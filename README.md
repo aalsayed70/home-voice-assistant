@@ -277,6 +277,8 @@ The system will:
 
 ### Workflow Architecture
 
+<img width="1178" height="547" alt="n8n workflow" src="https://github.com/user-attachments/assets/8ecaebe7-8362-4bfb-8854-a917f8ef58f9" />
+
 The N8N automation is split into two main parts:
 
 1) Scheduled Device Catalog Updater
@@ -289,9 +291,7 @@ The N8N automation is split into two main parts:
    - Purpose: Classify user intent, select the target device(s), perform service calls or state lookups, and return a natural-language response.
    - Core steps: Intent classification → Device search (MySQL) → Route to control/inquiry/general agents → Call Home Assistant → Build reply.
 
-Below are the core components used by both parts:
-<img width="1178" height="547" alt="image" src="https://github.com/user-attachments/assets/8ecaebe7-8362-4bfb-8854-a917f8ef58f9" />
-The N8N workflow is a sophisticated multi-agent system with the following components:
+Below are the core components used by the webhook path:
 
 #### Core Flow (Webhook Path)
 1. Webhook trigger receives a query (e.g., from `dary.py`)
@@ -299,13 +299,6 @@ The N8N workflow is a sophisticated multi-agent system with the following compon
 3. Device discovery/search in MySQL catalog
 4. Smart routing to specialized agents
 5. Response generation in Arabic/English
-#### Core Flow
-
-1. **Webhook Trigger** (`469998e4-fcd2-4b66-a094-b7df3e6c6119`): Receives voice commands from Dary
-2. **Intent Classification** (AI Agent3): Determines request type (control/inquiry/general)
-3. **Device Discovery**: Searches MySQL catalog using full-text search
-4. **Smart Routing**: Routes to appropriate AI agents based on intent
-5. **Response Generation**: Creates contextual responses in Arabic/English
 
 #### AI Agents
 - **AI Agent3**: Intent classifier (control/inquiry/general)
