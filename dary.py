@@ -1,26 +1,4 @@
 #!/usr/bin/env python3
-"""
-Dary – wake word → ElevenLabs Scribe STT → webhook → ElevenLabs TTS
-Custom wake word: ONNX model at /home/aalsayed/models/Daari.onnx
-
-Install (venv):
-  pip install sounddevice webrtcvad numpy requests pydub python-dotenv onnxruntime
-  # openwakeword already installed from GitHub
-
-System deps:
-  ffmpeg (for pydub to decode MP3)
-
-.env (next to this file):
-  ELEVENLABS_API_KEY=sk_...
-  VOICE_ID=21m00Tcm4TlvDq8ikWAM
-  WEBHOOK_URL=https://example.com/endpoint
-  LANGUAGE_CODE=auto          # or "en"/"eng"; "auto" omits the param (auto-detect)
-  # Optional:
-  # INPUT_DEVICE=2            # mic device index or exact name
-  # OUTPUT_DEVICE=5           # speaker device index or exact name
-  # WAKE_THRESHOLD=0.60
-  # REQUIRED_HITS=3
-"""
 
 import io
 import os
@@ -39,56 +17,44 @@ import sounddevice as sd
 from dotenv import load_dotenv
 from pydub import AudioSegment
 
-# OpenWakeWord
 from openwakeword.model import Model as OWWModel
 
-# -----------------------
-# Config & constants
-# -----------------------
 HERE = Path(__file__).resolve().parent
 load_dotenv(dotenv_path=HERE / ".env")
 
-# Required API config
 XI_KEY = (os.getenv("ELEVENLABS_API_KEY", "") or "").strip()
 VOICE_ID = (os.getenv("VOICE_ID", "") or "").strip()
 WEBHOOK_URL = (os.getenv("WEBHOOK_URL", "") or "").strip()
 LANGUAGE_CODE = (os.getenv("LANGUAGE_CODE", "auto") or "auto").strip()
 
-# Audio devices (optional)
 INPUT_DEVICE_ENV = (os.getenv("INPUT_DEVICE", "") or "").strip() or None
 OUTPUT_DEVICE_ENV = (os.getenv("OUTPUT_DEVICE", "") or "").strip() or None
 
-# Wake word model (your file)
-CUSTOM_WAKE_PATH = "/home/aalsayed/models/Daari.onnx"
-WAKEWORD_NAME = "daari" 
+WAKEWORD_MODEL = (os.getenv("WAKEWORD_MODEL", "") or "").strip()
+WAKEWORD_NAME = "daari"
 
-# Audio params
 SAMPLE_RATE = 16000
 CHANNELS = 1
-SAMPLE_WIDTH = 2  # bytes (16-bit PCM)
+SAMPLE_WIDTH = 2
 
-# Wake detection & VAD
-WAKE_THRESHOLD = 0.1 # raise to reduce false wakes, lower to ease trigger
-WAKE_FRAME_SEC = 0.08           # 80 ms frames for OWW
-REQUIRED_HITS = 1  # consecutive frames >= threshold before triggering
+WAKE_THRESHOLD = 0.1
+WAKE_FRAME_SEC = 0.08
+REQUIRED_HITS = 1
 
 VAD_AGGRESSIVENESS = 2
-VAD_FRAME_MS = 20               # webrtcvad supports 10/20/30 ms only
+VAD_FRAME_MS = 20
 MAX_UTTERANCE_SEC = 15
 SILENCE_TAIL_MS = 700
 
-# ElevenLabs API endpoints
 STT_URL = "https://api.elevenlabs.io/v1/speech-to-text"
 TTS_URL_TMPL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 
-# -----------------------
-# Utilities
-# -----------------------
 def _assert_env() -> None:
     assert XI_KEY, "Missing ELEVENLABS_API_KEY in environment/.env"
     assert VOICE_ID, "Missing VOICE_ID in environment/.env"
     assert WEBHOOK_URL, "Missing WEBHOOK_URL in environment/.env"
-    assert Path(CUSTOM_WAKE_PATH).exists(), f"Wake model not found: {CUSTOM_WAKE_PATH}"
+    assert WAKEWORD_MODEL, "Missing WAKEWORD_MODEL in environment/.env"
+    assert Path(WAKEWORD_MODEL).exists(), f"Wake model not found: {WAKEWORD_MODEL}"
 
 def _parse_device(dev: Optional[str]):
     if not dev:
@@ -96,7 +62,7 @@ def _parse_device(dev: Optional[str]):
     try:
         return int(dev)
     except ValueError:
-        return dev  # device name
+        return dev
 
 def _configure_devices() -> None:
     in_dev = _parse_device(INPUT_DEVICE_ENV)
@@ -107,7 +73,7 @@ def _configure_devices() -> None:
             current[0] = in_dev
         if out_dev is not None:
             current[1] = out_dev
-        sd.default.device = tuple(current)  # type: ignore[assignment]
+        sd.default.device = tuple(current)
 
 def wav_bytes_from_pcm16(pcm16: bytes, sample_rate: int = SAMPLE_RATE) -> bytes:
     buf = io.BytesIO()
@@ -119,9 +85,6 @@ def wav_bytes_from_pcm16(pcm16: bytes, sample_rate: int = SAMPLE_RATE) -> bytes:
     return buf.getvalue()
 
 def play_mp3_via_sounddevice(mp3_bytes: bytes) -> None:
-    """
-    Decode MP3 with pydub (ffmpeg) → numpy float32 → play with sounddevice.
-    """
     seg = AudioSegment.from_file(io.BytesIO(mp3_bytes), format="mp3")
     samples = np.array(seg.get_array_of_samples())
     if seg.channels > 1:
@@ -130,17 +93,12 @@ def play_mp3_via_sounddevice(mp3_bytes: bytes) -> None:
     sd.play(audio_f32, seg.frame_rate)
     sd.wait()
 
-# -----------------------
-# ElevenLabs API wrappers
-# -----------------------
 def transcribe_with_scribe(wav_bytes: bytes, language_code: str = LANGUAGE_CODE) -> str:
     headers = {"xi-api-key": XI_KEY}
     files = {"file": ("audio.wav", io.BytesIO(wav_bytes), "audio/wav")}
     data: Dict[str, Any] = {"model_id": "scribe_v1"}
-
     if language_code and language_code.lower() != "auto":
-        data["language_code"] = language_code  # "en" / "eng", etc.
-
+        data["language_code"] = language_code
     r = requests.post(STT_URL, headers=headers, files=files, data=data, timeout=60)
     try:
         r.raise_for_status()
@@ -150,7 +108,6 @@ def transcribe_with_scribe(wav_bytes: bytes, language_code: str = LANGUAGE_CODE)
         except Exception:
             logging.error("STT error body (text): %s", r.text)
         raise
-
     j = r.json()
     for key in ("text", "transcript", "output_text"):
         if isinstance(j, dict) and isinstance(j.get(key), str) and j[key].strip():
@@ -173,58 +130,41 @@ def tts_to_mp3_bytes(text: str) -> bytes:
     r.raise_for_status()
     return r.content
 
-# -----------------------
-# Audio capture
-# -----------------------
 def record_until_silence(raw_stream: sd.RawInputStream,
                          vad: webrtcvad.Vad,
                          max_seconds: int = MAX_UTTERANCE_SEC,
                          tail_ms: int = SILENCE_TAIL_MS) -> Optional[bytes]:
-    frame_len = int(SAMPLE_RATE * (VAD_FRAME_MS / 1000.0))  # frames per read
+    frame_len = int(SAMPLE_RATE * (VAD_FRAME_MS / 1000.0))
     voiced = False
     start_t = time.time()
     last_voice_t = start_t
     ring = bytearray()
-
     while True:
         if time.time() - start_t > max_seconds:
             break
-
         data, overflowed = raw_stream.read(frame_len)
         if overflowed:
             logging.debug("Input overflow")
         if not data:
             continue
-
         ring.extend(data)
-
-        # webrtcvad expects exact 10/20/30ms 16-bit mono PCM @ 16k
         try:
             if vad.is_speech(bytes(data), SAMPLE_RATE):
                 voiced = True
                 last_voice_t = time.time()
         except Exception as e:
             logging.debug(f"VAD error: {e}")
-
         if voiced and ((time.time() - last_voice_t) * 1000.0 > tail_ms):
             break
-
-    # Require at least ~1s audio
     if len(ring) < SAMPLE_RATE * SAMPLE_WIDTH * 1:
         return None
     return bytes(ring)
 
-# -----------------------
-# Wake word
-# -----------------------
 def load_wake_model() -> OWWModel:
-    path = Path(CUSTOM_WAKE_PATH)
+    path = Path(WAKEWORD_MODEL)
     if not path.exists():
         raise FileNotFoundError(f"Custom wake model not found at: {path}")
-
     logging.info(f"Loading custom wake model (ONNX): {path}")
-
-    # Primary path: most builds accept these kwargs
     try:
         return OWWModel(
             wakeword_models=[str(path)],
@@ -233,16 +173,13 @@ def load_wake_model() -> OWWModel:
             enable_speex_noise_suppression=False,
         )
     except TypeError as e:
-        # Some buggy builds forward kwargs incorrectly.
         logging.warning(f"OpenWakeWord kwargs not accepted ({e}); trying minimal init…")
         try:
-            # Minimal init; many builds still auto-detect model type from path list
             return OWWModel(
                 wakeword_models=[str(path)],
                 inference_framework="onnx",
             )
         except Exception as e2:
-            # Last resort: tell the user exactly what to do
             raise RuntimeError(
                 "Your openwakeword install can't accept custom model kwargs. "
                 "Reinstall it from GitHub and skip deps:\n"
@@ -252,9 +189,6 @@ def load_wake_model() -> OWWModel:
             ) from e2
 
 def pick_score(scores: Dict[str, float], name_substr: str) -> float:
-    """
-    Find a score for a key containing the wakeword substring; else return max.
-    """
     name_substr = (name_substr or "").lower()
     if not scores:
         return 0.0
@@ -265,16 +199,12 @@ def pick_score(scores: Dict[str, float], name_substr: str) -> float:
 
 def listen_loop() -> None:
     logging.info("🎙️ Dary is listening for the wake word… (say: 'daari')")
-
     model = load_wake_model()
     vad = webrtcvad.Vad(VAD_AGGRESSIVENESS)
     wake_frames = int(SAMPLE_RATE * WAKE_FRAME_SEC)
-
     printed_keys_once = False
     consec = 0
-
     _configure_devices()
-
     with sd.RawInputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, dtype="int16") as stream:
         while True:
             data, overflowed = stream.read(wake_frames)
@@ -282,32 +212,24 @@ def listen_loop() -> None:
                 logging.debug("Wake stream overflow")
             if not data:
                 continue
-
             np_frame = np.frombuffer(data, dtype=np.int16)
-            scores = model.predict(np_frame)  # dict[str, float]
-
+            scores = model.predict(np_frame)
             if not printed_keys_once:
                 logging.info(f"Wake model score keys seen: {list(scores.keys())}")
                 printed_keys_once = True
-
             score = pick_score(scores, WAKEWORD_NAME)
-
             if score >= WAKE_THRESHOLD:
                 consec += 1
             else:
                 consec = 0
-
             if consec >= REQUIRED_HITS:
                 consec = 0
                 logging.info(f"✅ Wake word detected: {WAKEWORD_NAME} (score={score:.2f})")
                 logging.info("🎧 Speak your command…")
-
                 pcm16 = record_until_silence(stream, vad)
                 if not pcm16:
                     logging.info("(too short / no speech captured, ignoring)")
                     continue
-
-                # Transcribe
                 try:
                     wav_bytes = wav_bytes_from_pcm16(pcm16, SAMPLE_RATE)
                     logging.info("📝 Transcribing with Scribe v1…")
@@ -316,8 +238,6 @@ def listen_loop() -> None:
                 except Exception:
                     logging.exception("STT error")
                     continue
-
-                # Send to webhook
                 try:
                     logging.info("🌐 POST → webhook…")
                     resp = requests.post(
@@ -342,19 +262,6 @@ def listen_loop() -> None:
                     logging.exception("Webhook error")
                     reply_text = "I couldn’t reach the webhook."
 
-                # Speak reply
-                # try:
-                #     logging.info("🔊 Speaking reply…")
-                #     mp3 = tts_to_mp3_bytes(reply_text)
-                #     play_mp3_via_sounddevice(mp3)
-                # except Exception:
-                #     logging.exception("TTS/playback error")
-
-                # logging.info("🎙️ Listening for wake word…")
-
-# -----------------------
-# Entrypoint
-# -----------------------
 def main() -> None:
     _assert_env()
     logging.basicConfig(
