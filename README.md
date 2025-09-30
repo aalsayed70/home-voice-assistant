@@ -265,6 +265,7 @@ The system will:
 
 ## 🔧 N8N Workflow Setup
 
+
 ### Import Workflow
 
 1. Open your N8N instance
@@ -275,10 +276,11 @@ The system will:
    - **Home Assistant API**: For device control and state queries
 
 ### Workflow Architecture
-
+<img width="1178" height="547" alt="image" src="https://github.com/user-attachments/assets/8ecaebe7-8362-4bfb-8854-a917f8ef58f9" />
 The N8N workflow is a sophisticated multi-agent system with the following components:
 
 #### Core Flow
+
 1. **Webhook Trigger** (`469998e4-fcd2-4b66-a094-b7df3e6c6119`): Receives voice commands from Dary
 2. **Intent Classification** (AI Agent3): Determines request type (control/inquiry/general)
 3. **Device Discovery**: Searches MySQL catalog using full-text search
