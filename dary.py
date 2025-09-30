@@ -30,7 +30,10 @@ LANGUAGE_CODE = (os.getenv("LANGUAGE_CODE", "auto") or "auto").strip()
 INPUT_DEVICE_ENV = (os.getenv("INPUT_DEVICE", "") or "").strip() or None
 OUTPUT_DEVICE_ENV = (os.getenv("OUTPUT_DEVICE", "") or "").strip() or None
 
-WAKEWORD_MODEL = (os.getenv("WAKEWORD_MODEL", "") or "").strip()
+WAKEWORD_MODEL_PATH_ENV = (os.getenv("WAKEWORD_MODEL_PATH", "") or "").strip()
+WAKEWORD_MODEL_DIR_ENV = (os.getenv("WAKEWORD_MODEL_DIR", "") or "").strip()
+WAKEWORD_MODEL_FILENAME_ENV = (os.getenv("WAKEWORD_MODEL_FILENAME", "") or "").strip()
+WAKEWORD_MODEL_LEGACY = (os.getenv("WAKEWORD_MODEL", "") or "").strip()
 WAKEWORD_NAME = "daari"
 
 SAMPLE_RATE = 16000
@@ -49,12 +52,30 @@ SILENCE_TAIL_MS = 700
 STT_URL = "https://api.elevenlabs.io/v1/speech-to-text"
 TTS_URL_TMPL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 
+def _resolve_wake_model_path() -> Path:
+    # Priority: explicit path → legacy single var → dir+filename
+    if WAKEWORD_MODEL_PATH_ENV:
+        return Path(WAKEWORD_MODEL_PATH_ENV)
+    if WAKEWORD_MODEL_LEGACY:
+        return Path(WAKEWORD_MODEL_LEGACY)
+    if WAKEWORD_MODEL_DIR_ENV:
+        if not WAKEWORD_MODEL_FILENAME_ENV:
+            raise AssertionError(
+                "WAKEWORD_MODEL_FILENAME is required when using WAKEWORD_MODEL_DIR"
+            )
+        return Path(WAKEWORD_MODEL_DIR_ENV) / WAKEWORD_MODEL_FILENAME_ENV
+    raise AssertionError(
+        "Missing wake word model configuration: set WAKEWORD_MODEL_PATH, or "
+        "WAKEWORD_MODEL (legacy), or WAKEWORD_MODEL_DIR + WAKEWORD_MODEL_FILENAME"
+    )
+
+
 def _assert_env() -> None:
     assert XI_KEY, "Missing ELEVENLABS_API_KEY in environment/.env"
     assert VOICE_ID, "Missing VOICE_ID in environment/.env"
     assert WEBHOOK_URL, "Missing WEBHOOK_URL in environment/.env"
-    assert WAKEWORD_MODEL, "Missing WAKEWORD_MODEL in environment/.env"
-    assert Path(WAKEWORD_MODEL).exists(), f"Wake model not found: {WAKEWORD_MODEL}"
+    model_path = _resolve_wake_model_path()
+    assert model_path.exists(), f"Wake model not found: {model_path}"
 
 def _parse_device(dev: Optional[str]):
     if not dev:
@@ -161,7 +182,7 @@ def record_until_silence(raw_stream: sd.RawInputStream,
     return bytes(ring)
 
 def load_wake_model() -> OWWModel:
-    path = Path(WAKEWORD_MODEL)
+    path = _resolve_wake_model_path()
     if not path.exists():
         raise FileNotFoundError(f"Custom wake model not found at: {path}")
     logging.info(f"Loading custom wake model (ONNX): {path}")

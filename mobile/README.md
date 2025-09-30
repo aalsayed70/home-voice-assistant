@@ -1,20 +1,102 @@
+# Dary Mobile App (Flutter)
 
-# Dar-Tech
-Dar-Tech is an AI-powered automation platform integrating n8n and Home Assistant for smart workflows and IoT control. This repo includes source code, automation workflows, and documentation to help you set up, customize, and scale intelligent automation for smart homes and enterprises.
+A cross-platform Flutter app that complements the `dary.py` voice assistant. It provides remote control for Home Assistant devices, quick actions (Moments), and a chat/voice interface to talk with Dary via your N8N backend.
 
-# dar
+## ✨ Features
 
-A new Flutter project.
+- Remote control for Home Assistant devices
+- Moments/Scenes configuration and execution
+- Talk with Dary (text/voice) connected to the same backend
+- Cross-platform targets: Android, iOS, Web, macOS, Windows, Linux
 
-## Getting Started
+## 📦 Requirements
 
-This project is a starting point for a Flutter application.
+- Flutter SDK 3.24+ (Dart 3)
+- Android Studio (Android SDK, emulator) and/or Xcode (iOS)
+- A running N8N instance and Home Assistant (see repository root README)
 
-A few resources to get you started if this is your first Flutter project:
+## 🚀 Setup
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+cd mobile
+flutter pub get
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+If building for Android/iOS, ensure you have platform toolchains installed (Android SDK/Xcode) and an emulator or device available.
+
+## ⚙️ Configuration
+
+The app communicates with your backend (N8N, Home Assistant). Update base URLs and endpoints where applicable. Key places to check:
+
+- `lib/talk_with_dary.dart`: webhook/API endpoint used for chatting with Dary
+- `lib/screens/*.dart`: any screens that access backend endpoints
+- `lib/models/*.dart`: data models that might encode base URLs or keys
+
+For secure builds, prefer storing secrets in platform-specific configuration rather than committing them to source.
+
+## ▶️ Run
+
+```bash
+flutter run
+```
+
+Select your target device when prompted. For web:
+
+```bash
+flutter run -d chrome
+```
+
+## 🔨 Build
+
+Android APK (debug):
+```bash
+flutter build apk --debug
+```
+
+Android APK (release):
+```bash
+flutter build apk --release
+```
+
+iOS (requires macOS/Xcode):
+```bash
+flutter build ios --release
+```
+
+Web:
+```bash
+flutter build web
+```
+
+## 🧩 Project Layout
+
+```
+mobile/
+├── lib/                    # Dart source (UI, models, state)
+├── assets/                 # Images and other assets
+├── android/, ios/, web/    # Platform targets
+├── linux/, macos/, windows # Desktop targets
+└── README.md
+```
+
+Notable files:
+- `lib/main.dart`: app entry point
+- `lib/talk_with_dary.dart`: chat/voice integration with backend
+- `lib/screens/`: feature screens (dashboard, device control, moments, etc.)
+- `lib/models/`: data models e.g., devices, moments
+
+## 🧪 Testing
+
+```bash
+flutter test
+```
+
+## ❓ Troubleshooting
+
+- If the app cannot reach your backend, verify the base URL/webhook in `lib/` files and that N8N is accessible from your device/emulator network.
+- For Android emulators accessing a host machine service, use `10.0.2.2` for localhost.
+- Ensure required Home Assistant tokens/credentials are configured server-side.
+
+## 📄 License
+
+This app is part of the Dary project. See the repository root for licensing details.

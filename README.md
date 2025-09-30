@@ -38,12 +38,45 @@ Dary is a voice-controlled smart home assistant that combines:
 ## 📁 Project Structure
 
 ```
-dartech/
-├── dary.py              # Main voice assistant application
-├── workflowN8N.json     # N8N workflow configuration
-├── .env                 # Environment configuration (create this)
-└── README.md           # This file
+home-voice-assistant/
+├── dary.py               # Desktop voice assistant (Python)
+├── workflowN8N.json      # N8N workflow configuration
+├── mobile/               # Flutter mobile app (Android/iOS/web/desktop)
+│  ├── lib/               # Flutter source (Dart)
+│  ├── android/           # Android project
+│  ├── ios/               # iOS project
+│  ├── web/               # Web build target
+│  ├── macos/, windows/, linux/  # Desktop targets
+│  └── README.md          # Mobile app README
+├── .env                  # Environment configuration (create this)
+└── README.md             # This file
 ```
+
+## 📱 Mobile App
+
+The repository now includes a Flutter-based mobile app under `mobile/` that works alongside the voice assistant:
+
+- **Remote control** for Home Assistant devices
+- **Moments/Scenes** quick actions
+- **Voice chat with Dary** using the same N8N backend
+- Cross-platform: Android, iOS, Web, and desktop
+
+### Mobile App: Quick Start
+
+Prerequisites:
+- Flutter SDK (3.24+ recommended)
+- Android Studio / Xcode for platform tooling
+- A running N8N instance and Home Assistant (same as backend requirements below)
+
+Commands:
+```bash
+cd mobile
+flutter pub get
+flutter run  # choose device/emulator
+```
+
+Configuration:
+- Update any environment/base URLs inside the app as needed (e.g., N8N webhook or API base). See `lib/` screens such as `talk_with_dary.dart` for where the app posts voice/text to your backend.
 
 ## 🚀 Quick Start
 
@@ -106,14 +139,19 @@ OUTPUT_DEVICE=5     # Speaker device index or name
 # Wake Word Sensitivity (optional)
 WAKE_THRESHOLD=0.1  # Lower = more sensitive
 REQUIRED_HITS=1     # Consecutive frames needed to trigger
+
+# Wake Word Model Location
+# Directory containing your ONNX wake word model
+WAKEWORD_MODEL_DIR=/absolute/path/to/your/model/dir
+# Optional: override full path (takes precedence if set)
+# WAKEWORD_MODEL_PATH=/absolute/path/to/your/model.onnx
 ```
 
 ### Wake Word Model
 
-Place your custom wake word model at:
-```
-/home/aalsayed/models/Daari.onnx
-```
+Place your ONNX wake word model in a location you choose and configure either:
+- `WAKEWORD_MODEL_DIR` to the containing directory, or
+- `WAKEWORD_MODEL_PATH` to the explicit model file path.
 
 The model should be trained to recognize "Daari" (Arabic pronunciation).
 
@@ -269,7 +307,7 @@ python -c "import sounddevice as sd; print(sd.query_devices())"
 ### Common Issues
 
 1. **Wake word not detected:**
-   - Check model path: `/home/aalsayed/models/Daari.onnx`
+   - Check `WAKEWORD_MODEL_DIR` or `WAKEWORD_MODEL_PATH` in `.env`
    - Adjust `WAKE_THRESHOLD` in `.env`
    - Verify microphone permissions
 
