@@ -26,6 +26,8 @@ XI_KEY = (os.getenv("ELEVENLABS_API_KEY", "") or "").strip()
 VOICE_ID = (os.getenv("VOICE_ID", "") or "").strip()
 WEBHOOK_URL = (os.getenv("WEBHOOK_URL", "") or "").strip()
 LANGUAGE_CODE = (os.getenv("LANGUAGE_CODE", "auto") or "auto").strip()
+TTS_ENABLED = (os.getenv("TTS_ENABLED", "true") or "true").strip().lower() in {"1", "true", "yes", "on"}
+TTS_VOICE_ID = (os.getenv("TTS_VOICE_ID", "") or "").strip() or VOICE_ID
 
 INPUT_DEVICE_ENV = (os.getenv("INPUT_DEVICE", "") or "").strip() or None
 OUTPUT_DEVICE_ENV = (os.getenv("OUTPUT_DEVICE", "") or "").strip() or None
@@ -135,8 +137,9 @@ def transcribe_with_scribe(wav_bytes: bytes, language_code: str = LANGUAGE_CODE)
             return j[key].strip()
     return json.dumps(j) if isinstance(j, (dict, list)) else str(j)
 
-def tts_to_mp3_bytes(text: str) -> bytes:
-    url = TTS_URL_TMPL.format(voice_id=VOICE_ID)
+def tts_to_mp3_bytes(text: str, voice_id: Optional[str] = None) -> bytes:
+    v_id = (voice_id or TTS_VOICE_ID or VOICE_ID)
+    url = TTS_URL_TMPL.format(voice_id=v_id)
     headers = {
         "xi-api-key": XI_KEY,
         "accept": "audio/mpeg",
@@ -282,6 +285,18 @@ def listen_loop() -> None:
                 except Exception:
                     logging.exception("Webhook error")
                     reply_text = "I couldn’t reach the webhook."
+
+                # Speak the reply using TTS if enabled
+                try:
+                    if TTS_ENABLED and reply_text and reply_text.strip():
+                        logging.info("🔊 Speaking reply via TTS…")
+                        mp3_bytes = tts_to_mp3_bytes(reply_text)
+                        play_mp3_via_sounddevice(mp3_bytes)
+                    else:
+                        logging.info("💬 Reply: %s", reply_text)
+                except Exception:
+                    logging.exception("TTS playback failed; printing text instead")
+                    logging.info("💬 Reply: %s", reply_text)
 
 def main() -> None:
     _assert_env()
