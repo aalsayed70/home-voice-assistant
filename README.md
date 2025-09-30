@@ -145,7 +145,7 @@ flutter run  # choose device/emulator
 ```
 
 Configuration:
-- Recording is implemented, but posting audio/text to the webhook is not yet wired. Add an HTTP POST in `lib/talk_with_dary.dart` (e.g., in `_stopRecording`) to your n8n webhook URL, then display the response in the UI.
+- Update any environment/base URLs inside the app as needed (e.g., N8N webhook or API base). See `lib/` screens such as `talk_with_dary.dart` for where the app posts voice/text to your backend.
 
 ## 🚀 Quick Start
 
