@@ -86,24 +86,27 @@ flowchart LR
 ### Containers (C4 - Level 2)
 
 ```mermaid
-flowchart TB
-  ww[Wake Word ONNX]
-  stt[Speech to Text]
-  wclient[Webhook Client]
-  ui[Flutter UI]
-  rec[Recorder]
-  http[HTTP Client]
+sequenceDiagram
+  autonumber
+  participant User
+  participant Dary as Voice Assistant
+  participant App as Flutter App
+  participant N8N as n8n Workflow
+  participant HA as Home Assistant
+  participant DB as MySQL
 
-  wf[n8n Workflow]
-  cat[Device Catalog Processor]
-  mem[Session Memory]
-  haapi[Home Assistant API]
-  sqldb[MySQL ha_devices]
+  User->>Dary: Say "Daari" then command
+  Dary->>Dary: Detect wake word (ONNX)
+  Dary->>N8N: POST {query, source="dary"}
+  User->>App: Tap/record voice
+  App->>N8N: POST audio/text
 
-  ww --> stt --> wclient --> wf
-  rec --> http --> wf
-  wf --> haapi
-  wf --> sqldb
+  N8N->>DB: Search device catalog
+  N8N->>HA: Call service / query state
+  HA-->>N8N: State/ack
+  DB-->>N8N: Results
+  N8N-->>Dary: Response text
+  N8N-->>App: Response text
 ```
 
 ### Voice Flow (Desktop Assistant)
