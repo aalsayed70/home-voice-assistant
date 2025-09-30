@@ -81,6 +81,7 @@ flowchart LR
   n8n --> ha
   n8n --> db
   ha --> n8n
+  db --> n8n
 ```
 
 ### Containers (C4 - Level 2)
@@ -104,6 +105,8 @@ flowchart TB
   rec --> http --> wf
   wf --> haapi
   wf --> sqldb
+  haapi --> wf
+  sqldb --> wf
 ```
 
 ### Voice Flow (Desktop Assistant)
