@@ -83,6 +83,7 @@ flowchart LR
   ha --> n8n
   db --> n8n
 ```
+<img width="3236" height="1256" alt="image" src="https://github.com/user-attachments/assets/4c807487-b341-40f6-abc6-b7f0475fbb67" />
 
 ### Containers (C4 - Level 2)
 
@@ -108,6 +109,7 @@ flowchart TB
   haapi --> wf
   sqldb --> wf
 ```
+<img width="3792" height="4496" alt="image" src="https://github.com/user-attachments/assets/1af192d3-cb6d-4417-b415-d3734ba0cc69" />
 
 ### Voice Flow (Desktop Assistant)
 
