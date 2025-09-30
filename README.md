@@ -87,7 +87,7 @@ Configuration:
 - Home Assistant instance
 - N8N instance
 - ElevenLabs API account
-- Custom wake word model (`Daari.onnx`)
+- Custom wake word model (ONNX)
 
 ### Installation
 
@@ -140,18 +140,23 @@ OUTPUT_DEVICE=5     # Speaker device index or name
 WAKE_THRESHOLD=0.1  # Lower = more sensitive
 REQUIRED_HITS=1     # Consecutive frames needed to trigger
 
-# Wake Word Model Location
-# Directory containing your ONNX wake word model
+# Wake Word Model (choose one of A or B)
+# A) Explicit path to your ONNX wake word model
+WAKEWORD_MODEL_PATH=/absolute/path/to/your/model.onnx
+# B) Directory + filename
 WAKEWORD_MODEL_DIR=/absolute/path/to/your/model/dir
-# Optional: override full path (takes precedence if set)
-# WAKEWORD_MODEL_PATH=/absolute/path/to/your/model.onnx
+WAKEWORD_MODEL_FILENAME=model.onnx
+# Legacy (still supported):
+# WAKEWORD_MODEL=/absolute/path/to/your/model.onnx
 ```
 
 ### Wake Word Model
 
 Place your ONNX wake word model in a location you choose and configure either:
-- `WAKEWORD_MODEL_DIR` to the containing directory, or
-- `WAKEWORD_MODEL_PATH` to the explicit model file path.
+- `WAKEWORD_MODEL_PATH` to the explicit model file path, or
+- `WAKEWORD_MODEL_DIR` plus `WAKEWORD_MODEL_FILENAME` to the containing directory and file name.
+
+Note: The legacy variable `WAKEWORD_MODEL` is still supported for backward compatibility.
 
 The model should be trained to recognize "Daari" (Arabic pronunciation).
 
@@ -307,7 +312,7 @@ python -c "import sounddevice as sd; print(sd.query_devices())"
 ### Common Issues
 
 1. **Wake word not detected:**
-   - Check `WAKEWORD_MODEL_DIR` or `WAKEWORD_MODEL_PATH` in `.env`
+   - Check `WAKEWORD_MODEL_PATH` or `WAKEWORD_MODEL_DIR` + `WAKEWORD_MODEL_FILENAME` in `.env`
    - Adjust `WAKE_THRESHOLD` in `.env`
    - Verify microphone permissions
 
