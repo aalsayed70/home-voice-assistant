@@ -276,9 +276,29 @@ The system will:
    - **Home Assistant API**: For device control and state queries
 
 ### Workflow Architecture
+
+The N8N automation is split into two main parts:
+
+1) Scheduled Device Catalog Updater
+   - Trigger: Schedule (cron)
+   - Purpose: Discover new/changed Home Assistant entities, enrich them with bilingual keywords, and persist to MySQL (`ha_devices`).
+   - Core steps: Fetch states/services from Home Assistant → Process/normalize → Generate keywords (Arabic/English) → Upsert into MySQL.
+
+2) Webhook for User Queries
+   - Trigger: Webhook (called by `dary.py` and, in the future, the mobile app)
+   - Purpose: Classify user intent, select the target device(s), perform service calls or state lookups, and return a natural-language response.
+   - Core steps: Intent classification → Device search (MySQL) → Route to control/inquiry/general agents → Call Home Assistant → Build reply.
+
+Below are the core components used by both parts:
 <img width="1178" height="547" alt="image" src="https://github.com/user-attachments/assets/8ecaebe7-8362-4bfb-8854-a917f8ef58f9" />
 The N8N workflow is a sophisticated multi-agent system with the following components:
 
+#### Core Flow (Webhook Path)
+1. Webhook trigger receives a query (e.g., from `dary.py`)
+2. Intent classification determines request type (control/inquiry/general)
+3. Device discovery/search in MySQL catalog
+4. Smart routing to specialized agents
+5. Response generation in Arabic/English
 #### Core Flow
 
 1. **Webhook Trigger** (`469998e4-fcd2-4b66-a094-b7df3e6c6119`): Receives voice commands from Dary
