@@ -67,24 +67,22 @@ The repository now includes a Flutter-based mobile app under `mobile/` that work
 
 ```mermaid
 flowchart LR
-  User((User))
-  subgraph DarySystem[Dary System]
-    VA[Python Voice Assistant - dary.py]
-    Mobile[Flutter Mobile Web Desktop App]
-    N8N[n8n Orchestrator - workflowN8N.json]
-    HA[Home Assistant]
-    DB[(MySQL Device Catalog)]
+  user[User]
+  subgraph DarySystem
+    va[Voice Assistant - dary.py]
+    app[Flutter App]
+    n8n[n8n Orchestrator]
+    ha[Home Assistant]
+    db[(MySQL)]
   end
 
-  User -- voice/commands --> VA
-  User -- tap/voice/chat --> Mobile
-  VA -- webhook JSON --> N8N
-  Mobile -- HTTP/Webhook --> N8N
-  N8N -- service calls --> HA
-  N8N -- catalog/search --> DB
-  HA -- states/services --> N8N
-  N8N -- responses --> VA
-  N8N -- responses --> Mobile
+  user --> va
+  user --> app
+  va --> n8n
+  app --> n8n
+  n8n --> ha
+  n8n --> db
+  ha --> n8n
 ```
 
 ### Containers (C4 - Level 2)
@@ -92,27 +90,26 @@ flowchart LR
 ```mermaid
 flowchart TB
   subgraph Client
-    A1[Mic and Wake Word ONNX]
-    A2[Speech to Text Scribe]
-    A3[Webhook Client]
-    M1[Flutter UI]
-    M2[Recorder]
-    M3[HTTP Client]
+    ww[Wake Word (ONNX)]
+    stt[Speech to Text]
+    wclient[Webhook Client]
+    ui[Flutter UI]
+    rec[Recorder]
+    http[HTTP Client]
   end
 
-  subgraph Server/Automation
-    N1[n8n Workflow - Intent Routing and Agents]
-    N2[Device Catalog Processor]
-    N3[Session/Memory]
-    H1[Home Assistant API]
-    D1[(MySQL ha_devices)]
+  subgraph Server
+    wf[n8n Workflow]
+    cat[Device Catalog Processor]
+    mem[Session Memory]
+    haapi[Home Assistant API]
+    sqldb[(MySQL ha_devices)]
   end
 
-  A1 --> A2 --> A3 --> N1
-  M2 --> M3 --> N1
-  N1 --> H1
-  N1 --> D1
-  H1 --> N1
+  ww --> stt --> wclient --> wf
+  rec --> http --> wf
+  wf --> haapi
+  wf --> sqldb
 ```
 
 ### Voice Flow (Desktop Assistant)
