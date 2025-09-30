@@ -68,13 +68,11 @@ The repository now includes a Flutter-based mobile app under `mobile/` that work
 ```mermaid
 flowchart LR
   user[User]
-  subgraph DarySystem
-    va[Voice Assistant - dary.py]
-    app[Flutter App]
-    n8n[n8n Orchestrator]
-    ha[Home Assistant]
-    db[(MySQL)]
-  end
+  va[Voice Assistant - dary.py]
+  app[Flutter App]
+  n8n[n8n Orchestrator]
+  ha[Home Assistant]
+  db[MySQL]
 
   user --> va
   user --> app
@@ -89,22 +87,18 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  subgraph Client
-    ww[Wake Word (ONNX)]
-    stt[Speech to Text]
-    wclient[Webhook Client]
-    ui[Flutter UI]
-    rec[Recorder]
-    http[HTTP Client]
-  end
+  ww[Wake Word ONNX]
+  stt[Speech to Text]
+  wclient[Webhook Client]
+  ui[Flutter UI]
+  rec[Recorder]
+  http[HTTP Client]
 
-  subgraph Server
-    wf[n8n Workflow]
-    cat[Device Catalog Processor]
-    mem[Session Memory]
-    haapi[Home Assistant API]
-    sqldb[(MySQL ha_devices)]
-  end
+  wf[n8n Workflow]
+  cat[Device Catalog Processor]
+  mem[Session Memory]
+  haapi[Home Assistant API]
+  sqldb[MySQL ha_devices]
 
   ww --> stt --> wclient --> wf
   rec --> http --> wf
