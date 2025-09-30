@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:dar/screens/home_screen.dart';
 import 'package:dar/state.dart';
 import 'package:dar/models/device.dart';
 import 'package:dar/screens/device_control.dart';
@@ -21,15 +22,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final smartHome = context.watch<SmartHomeState>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF2A2A2A),
+      backgroundColor: const Color.fromARGB(255, 123, 123, 123),
       body: Container(
         decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: NetworkImage(
-              'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3',
-            ),
-            fit: BoxFit.cover,
-          ),
+          // image: DecorationImage(
+          //   image: AssetImage('assets/images/download (1).jpeg'),
+          //   fit: BoxFit.cover,
+          // ),
         ),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
@@ -250,7 +249,7 @@ class _DeviceCard extends StatelessWidget {
                       isOn: value,
                     );
                   },
-                  activeColor: const Color(0xFFB8E6B8),
+                  activeThumbColor: const Color(0xFFB8E6B8),
                 ),
               ],
             ),
@@ -304,7 +303,14 @@ class _BottomNavBar extends StatelessWidget {
             icon: Icons.home,
             index: 0,
             isActive: currentIndex == 0,
-            onTap: onTap,
+            onTap: (index) {
+              onTap(index);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => HomeScreen()),
+                (route) => false,
+              );
+            },
           ),
           _NavItem(
             icon: Icons.apps,

@@ -186,7 +186,7 @@ class DeviceControlScreen extends StatelessWidget {
                                 child: _QuickAction(
                                   label: 'Eco',
                                   icon: Icons.eco,
-                                  color: const Color(0xFFB8E6B8),
+                                  color: Colors.white.withOpacity(0.15),
                                   onTap: () {
                                     smartHome.updateDevice(
                                       device.id,

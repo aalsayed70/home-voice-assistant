@@ -1,4 +1,4 @@
-import 'package:dar/screens/configure_moments.dart';
+import 'package:dar/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -108,8 +108,7 @@ class _SplashScreenState extends State<SplashScreen>
 
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const ConfigureMomentsScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) => HomeScreen(),
           transitionDuration: const Duration(milliseconds: 500),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -176,7 +175,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 BoxShadow(
                                   color: const Color(
                                     0xFF4ECDC4,
-                                  ).withOpacity(0.3),
+                                  ).withValues(alpha: 0.3),
                                   blurRadius: 20,
                                   spreadRadius: 2,
                                 ),
@@ -217,7 +216,7 @@ class _SplashScreenState extends State<SplashScreen>
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               letterSpacing: 0.5,
                             ),
                           ),
