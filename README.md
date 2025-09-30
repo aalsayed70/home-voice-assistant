@@ -69,9 +69,9 @@ The repository now includes a Flutter-based mobile app under `mobile/` that work
 flowchart LR
   User((User))
   subgraph DarySystem[Dary System]
-    VA[Python Voice Assistant (dary.py)]
-    Mobile[Flutter Mobile/Web/Desktop App]
-    N8N[n8n Orchestrator (workflowN8N.json)]
+    VA[Python Voice Assistant - dary.py]
+    Mobile[Flutter Mobile Web Desktop App]
+    N8N[n8n Orchestrator - workflowN8N.json]
     HA[Home Assistant]
     DB[(MySQL Device Catalog)]
   end
@@ -92,8 +92,8 @@ flowchart LR
 ```mermaid
 flowchart TB
   subgraph Client
-    A1[Mic + Wake Word (ONNX)]
-    A2[Speech-to-Text (Scribe)]
+    A1[Mic and Wake Word ONNX]
+    A2[Speech to Text Scribe]
     A3[Webhook Client]
     M1[Flutter UI]
     M2[Recorder]
@@ -101,11 +101,11 @@ flowchart TB
   end
 
   subgraph Server/Automation
-    N1[n8n Workflow: Intent Routing + Agents]
+    N1[n8n Workflow - Intent Routing and Agents]
     N2[Device Catalog Processor]
     N3[Session/Memory]
     H1[Home Assistant API]
-    D1[(MySQL: ha_devices)]
+    D1[(MySQL ha_devices)]
   end
 
   A1 --> A2 --> A3 --> N1
