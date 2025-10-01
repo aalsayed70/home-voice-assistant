@@ -198,19 +198,9 @@ def load_wake_model() -> OWWModel:
         )
     except TypeError as e:
         logging.warning(f"OpenWakeWord kwargs not accepted ({e}); trying minimal init…")
-        try:
-            return OWWModel(
-                wakeword_models=[str(path)],
-                inference_framework="onnx",
-            )
-        except Exception as e2:
-            raise RuntimeError(
-                "Your openwakeword install can't accept custom model kwargs. "
-                "Reinstall it from GitHub and skip deps:\n"
-                "  python3 -m pip uninstall -y openwakeword\n"
-                "  python3 -m pip install --no-cache-dir --no-deps "
-                "\"openwakeword @ git+https://github.com/dscripka/openWakeWord.git@main\"\n"
-            ) from e2
+        wakeword_models=[str(path)],
+        inference_framework="onnx",
+            
 
 def pick_score(scores: Dict[str, float], name_substr: str) -> float:
     name_substr = (name_substr or "").lower()
